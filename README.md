@@ -1,13 +1,13 @@
-# 🎓 Academic Presentation Agent — Web App
+#  Academic Presentation Agent — Web App
 
-A web tool anyone can use (no Python knowledge needed).  
+A web tool anyone can use.  
 Upload a research paper → get a slide outline, poster layout, and downloadable PowerPoint.
 
 **Powered by Google Gemini (free API).**
 
 ---
 
-## 🚀 Deploy to the internet in 5 minutes (free)
+
 
 ### Step 1 — Push to GitHub
 1. Create a new repo at [github.com](https://github.com)
@@ -26,7 +26,7 @@ Your app will be live at `https://your-app-name.onrender.com` 🎉
 
 ---
 
-## 💻 Run locally (for testing)
+##  Run locally (for testing)
 
 ```bash
 pip install -r requirements.txt
@@ -37,7 +37,7 @@ Then open [http://localhost:8000](http://localhost:8000)
 
 ---
 
-## 📁 Project structure
+##  Project structure
 
 ```
 academic-agent-web/
@@ -50,8 +50,9 @@ academic-agent-web/
 
 ---
 
-## ⚠️ Important
 
-- Your `GEMINI_API_KEY` stays on the server — users never see it
+##  Important
+
+- The `GEMINI_API_KEY` stays on the server — users never see it
 - The free Gemini tier allows ~1,500 requests/day — enough for hundreds of papers
 - Generated `.pptx` files are stored temporarily in memory and cleared on restart
