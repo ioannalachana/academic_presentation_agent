@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Academic Presentation Agent</title>
+<style>
+  :root {
+    --navy:#1E2761; --teal:#008BCC; --sky:#E8F4FD; --ink:#1E293B;
+    --mist:#64748B; --paper:#F7F9FC; --white:#FFFFFF; --border:#DDE3ED;
+    --green:#059669; --red:#DC2626; --amber:#D97706; --radius:10px;
+    --shadow:0 2px 16px rgba(30,39,97,.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;}
+
+  header{background:var(--navy);color:var(--white);padding:1.4rem 2rem;display:flex;align-items:center;gap:1rem;}
+  header .logo{font-size:1.7rem;}
+  header h1{font-size:1.2rem;font-weight:700;}
+  header p{font-size:.82rem;opacity:.7;margin-top:.15rem;}
+
+  main{max-width:880px;margin:2.5rem auto;padding:0 1.5rem;}
+
+  .upload-card{background:var(--white);border:2px dashed var(--border);border-radius:var(--radius);
+    padding:3rem 2rem;text-align:center;transition:border-color .2s,background .2s;cursor:pointer;}
+  .upload-card:hover,.upload-card.drag-over{border-color:var(--teal);background:var(--sky);}
+  .upload-card .icon{font-size:2.8rem;margin-bottom:.8rem;}
+  .upload-card h2{font-size:1.15rem;font-weight:600;margin-bottom:.4rem;}
+  .upload-card p{font-size:.88rem;color:var(--mist);}
+  #file-input{display:none;}
+
+  .btn{display:inline-block;margin-top:1.2rem;padding:.7rem 1.8rem;background:var(--teal);
+    color:var(--white);border:none;border-radius:6px;font-size:.95rem;font-weight:600;
+    cursor:pointer;transition:background .15s,transform .1s;}
+  .btn:hover{background:#0070a8;} .btn:active{transform:scale(.98);}
+  .btn:disabled{background:var(--mist);cursor:not-allowed;}
+  .btn-navy{background:var(--navy);} .btn-navy:hover{background:#151d4a;}
+  .btn-green{background:var(--green);} .btn-green:hover{background:#047857;}
+  .btn-outline{background:transparent;border:2px solid var(--border);color:var(--mist);
+    padding:.6rem 1.4rem;border-radius:6px;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s;}
+  .btn-outline:hover{border-color:var(--teal);color:var(--teal);}
+
+  .file-selected{margin-top:1rem;padding:.6rem 1rem;background:var(--sky);border:1px solid var(--teal);
+    border-radius:6px;font-size:.88rem;color:var(--teal);display:none;}
+
+  /* Agent thinking panel */
+  .agent-panel{display:none;margin-top:2rem;background:var(--white);border:1px solid var(--border);
+    border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);}
+  .agent-panel-header{background:var(--navy);color:var(--white);padding:.9rem 1.2rem;
+    display:flex;align-items:center;gap:.6rem;}
+  .agent-panel-header h3{font-size:.95rem;font-weight:700;}
+  .thinking-dot{width:8px;height:8px;background:#4ade80;border-radius:50%;
+    animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+  .agent-log{max-height:280px;overflow-y:auto;padding:.8rem;}
+  .log-entry{display:flex;gap:.7rem;padding:.45rem .5rem;border-radius:6px;margin-bottom:.3rem;
+    font-size:.83rem;line-height:1.4;transition:background .2s;}
+  .log-entry:hover{background:var(--paper);}
+  .log-stage{font-weight:700;min-width:72px;font-size:.75rem;padding:.15rem .4rem;
+    border-radius:4px;text-align:center;align-self:flex-start;margin-top:.1rem;}
+  .stage-START,.stage-EXTRACT{background:#EFF6FF;color:#1D4ED8;}
+  .stage-PLAN{background:#F5F3FF;color:#6D28D9;}
+  .stage-GENERATE{background:#ECFDF5;color:#065F46;}
+  .stage-REVIEW{background:#FFF7ED;color:#92400E;}
+  .stage-AGENT{background:#F0FDF4;color:#166534;}
+  .stage-BUILD,.stage-DONE{background:#F0FDF4;color:#166534;}
+  .log-msg{color:var(--ink);}
+
+  /* Quality badge */
+  .quality-bar{display:flex;gap:1rem;padding:.7rem 1.2rem;background:var(--paper);
+    border-top:1px solid var(--border);flex-wrap:wrap;}
+  .q-badge{display:flex;align-items:center;gap:.4rem;font-size:.82rem;}
+  .q-score{font-weight:700;padding:.15rem .5rem;border-radius:4px;}
+  .score-pass{background:#DCFCE7;color:#166534;}
+  .score-fail{background:#FEE2E2;color:#991B1B;}
+
+  .error-box{display:none;margin-top:1.5rem;padding:1rem 1.2rem;background:#FEF2F2;
+    border:1px solid #FECACA;border-radius:var(--radius);color:var(--red);font-size:.9rem;}
+
+  #results{display:none;margin-top:2.5rem;}
+  .result-header{display:flex;align-items:center;justify-content:space-between;
+    flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;}
+  .result-header h2{font-size:1.2rem;font-weight:700;color:var(--navy);}
+
+  /* Plan summary card */
+  .plan-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+    padding:1.1rem 1.4rem;margin-bottom:1.5rem;box-shadow:var(--shadow);}
+  .plan-card h3{font-size:.9rem;font-weight:700;color:var(--navy);margin-bottom:.7rem;}
+  .plan-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.6rem;}
+  .plan-item{background:var(--paper);border-radius:6px;padding:.5rem .7rem;}
+  .plan-item .label{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mist);margin-bottom:.2rem;}
+  .plan-item .value{font-size:.85rem;font-weight:600;color:var(--ink);}
+
+  .tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:1.5rem;}
+  .tab{padding:.7rem 1.4rem;font-size:.92rem;font-weight:600;cursor:pointer;
+    border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--mist);transition:color .15s,border-color .15s;}
+  .tab.active{color:var(--teal);border-bottom-color:var(--teal);}
+  .tab-panel{display:none;} .tab-panel.active{display:block;}
+
+  .slide-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+    padding:1.2rem 1.4rem;margin-bottom:1rem;box-shadow:var(--shadow);}
+  .slide-card-header{display:flex;align-items:center;gap:.7rem;margin-bottom:.6rem;}
+  .slide-num{background:var(--navy);color:var(--white);font-size:.75rem;font-weight:700;
+    padding:.2rem .55rem;border-radius:4px;min-width:28px;text-align:center;}
+  .slide-type{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--teal);background:var(--sky);padding:.15rem .5rem;border-radius:4px;}
+  .slide-title{font-size:1rem;font-weight:700;color:var(--ink);}
+  .slide-points{margin-top:.5rem;padding-left:1rem;}
+  .slide-points li{font-size:.88rem;color:var(--ink);margin-bottom:.25rem;line-height:1.45;}
+  .speaker-notes{margin-top:.75rem;padding:.6rem .8rem;background:var(--paper);
+    border-left:3px solid var(--teal);border-radius:0 6px 6px 0;font-size:.82rem;
+    color:var(--mist);font-style:italic;}
+  .speaker-notes strong{color:var(--teal);font-style:normal;}
+
+  .poster-header{background:var(--navy);color:var(--white);border-radius:var(--radius) var(--radius) 0 0;padding:1.4rem 1.6rem;}
+  .poster-header h3{font-size:1.1rem;font-weight:700;}
+  .poster-header p{font-size:.85rem;opacity:.8;margin-top:.3rem;}
+  .key-takeaway{background:var(--teal);color:var(--white);padding:.9rem 1.6rem;font-size:.95rem;font-weight:600;line-height:1.4;}
+  .key-takeaway span{opacity:.8;font-size:.78rem;font-weight:400;display:block;margin-bottom:.2rem;}
+  .poster-columns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;
+    border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);overflow:hidden;}
+  .poster-col{padding:1.2rem;border-right:1px solid var(--border);background:var(--white);}
+  .poster-col:last-child{border-right:none;}
+  .poster-col-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+    color:var(--teal);margin-bottom:.8rem;padding-bottom:.4rem;border-bottom:2px solid var(--sky);}
+  .poster-section{margin-bottom:1.2rem;}
+  .poster-section h4{font-size:.88rem;font-weight:700;color:var(--navy);margin-bottom:.3rem;}
+  .poster-section p{font-size:.82rem;color:var(--ink);line-height:1.5;}
+  .poster-section ul{margin-top:.4rem;padding-left:1rem;}
+  .poster-section ul li{font-size:.8rem;color:var(--mist);margin-bottom:.2rem;}
+  .poster-section .fig{font-size:.78rem;color:var(--teal);margin-top:.4rem;font-style:italic;}
+  .poster-footer{padding:.7rem 1.6rem;background:var(--paper);border:1px solid var(--border);
+    border-top:none;border-radius:0 0 var(--radius) var(--radius);font-size:.82rem;color:var(--mist);}
+
+  .reset-wrap{text-align:center;margin-top:2.5rem;}
+
+  @media(max-width:600px){
+    .poster-columns{grid-template-columns:1fr;}
+    .poster-col{border-right:none;border-bottom:1px solid var(--border);}
+    .plan-grid{grid-template-columns:1fr 1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🎓</div>
+  <div>
+    <h1>Academic Presentation Agent</h1>
+    <p>AI agent that plans, generates, reviews, and refines your presentation automatically</p>
+  </div>
+</header>
+
+<main>
+  <div class="upload-card" id="drop-zone" onclick="document.getElementById('file-input').click()">
+    <div class="icon">📄</div>
+    <h2>Drop your PDF here, or click to browse</h2>
+    <p>Research paper, thesis chapter, or journal article — the agent handles the rest</p>
+    <button class="btn" onclick="event.stopPropagation();document.getElementById('file-input').click()">Choose PDF</button>
+    <input type="file" id="file-input" accept=".pdf">
+  </div>
+
+  <div class="file-selected" id="file-selected">📎 <span id="file-name"></span></div>
+
+  <div style="text-align:center;margin-top:1.2rem;">
+    <button class="btn btn-navy" id="generate-btn" onclick="generate()" disabled>🤖 Run Agent</button>
+  </div>
+
+  <!-- Agent thinking panel -->
+  <div class="agent-panel" id="agent-panel">
+    <div class="agent-panel-header">
+      <div class="thinking-dot" id="thinking-dot"></div>
+      <h3 id="agent-status">Agent thinking…</h3>
+    </div>
+    <div class="agent-log" id="agent-log"></div>
+    <div class="quality-bar" id="quality-bar" style="display:none"></div>
+  </div>
+
+  <div class="error-box" id="error-box"></div>
+
+  <div id="results">
+    <div class="result-header">
+      <h2 id="result-title">Your Presentation</h2>
+      <button class="btn btn-green" onclick="downloadPptx()">⬇️ Download PowerPoint</button>
+    </div>
+
+    <!-- Plan summary -->
+    <div class="plan-card" id="plan-card"></div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('slides',this)">📊 Slides</div>
+      <div class="tab" onclick="switchTab('poster',this)">🖼️ Poster</div>
+    </div>
+    <div class="tab-panel active" id="panel-slides"></div>
+    <div class="tab-panel" id="panel-poster"></div>
+
+    <div class="reset-wrap">
+      <button class="btn-outline" onclick="reset()">↩ Upload another paper</button>
+    </div>
+  </div>
+</main>
+
+<script>
+  let selectedFile = null, sessionId = null;
+  const fileInput = document.getElementById('file-input');
+  const dropZone  = document.getElementById('drop-zone');
+
+  fileInput.addEventListener('change', e => { if(e.target.files[0]) selectFile(e.target.files[0]); });
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if(f && f.name.endsWith('.pdf')) selectFile(f);
+  });
+
+  function selectFile(file) {
+    selectedFile = file;
+    document.getElementById('file-name').textContent = file.name;
+    document.getElementById('file-selected').style.display = 'block';
+    document.getElementById('generate-btn').disabled = false;
+  }
+
+  // Stage colours map
+  const stageClass = s => ({
+    START:'stage-START', EXTRACT:'stage-EXTRACT', PLAN:'stage-PLAN',
+    GENERATE:'stage-GENERATE', REVIEW:'stage-REVIEW',
+    AGENT:'stage-AGENT', BUILD:'stage-BUILD', DONE:'stage-DONE'
+  }[s] || 'stage-START');
+
+  function appendLog(entry) {
+    const log = document.getElementById('agent-log');
+    const div = document.createElement('div');
+    div.className = 'log-entry';
+    div.innerHTML = `<span class="log-stage ${stageClass(entry.stage)}">${entry.stage}</span>
+                     <span class="log-msg">${entry.message}</span>`;
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+    document.getElementById('agent-status').textContent =
+      entry.stage === 'DONE' ? 'Agent complete ✓' : `Agent: ${entry.message}`;
+    if(entry.stage === 'DONE') {
+      document.getElementById('thinking-dot').style.animation = 'none';
+      document.getElementById('thinking-dot').style.background = '#4ade80';
+    }
+  }
+
+  function showQuality(data) {
+    const bar = document.getElementById('quality-bar');
+    bar.style.display = 'flex';
+    const sr = data.slides_review || {};
+    const pr = data.poster_review || {};
+    bar.innerHTML = `
+      <div class="q-badge">🗂️ Slides quality:
+        <span class="q-score ${sr.passes ? 'score-pass':'score-fail'}">${sr.score||'?'}/10</span>
+        <span style="color:var(--mist);font-size:.78rem">${sr.verdict||''}</span>
+      </div>
+      <div class="q-badge">🖼️ Poster quality:
+        <span class="q-score ${pr.passes ? 'score-pass':'score-fail'}">${pr.score||'?'}/10</span>
+        <span style="color:var(--mist);font-size:.78rem">${pr.verdict||''}</span>
+      </div>`;
+  }
+
+  async function generate() {
+    if(!selectedFile) return;
+    document.getElementById('agent-panel').style.display = 'block';
+    document.getElementById('agent-log').innerHTML = '';
+    document.getElementById('quality-bar').style.display = 'none';
+    document.getElementById('error-box').style.display = 'none';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('generate-btn').disabled = true;
+    document.getElementById('agent-status').textContent = 'Agent starting…';
+
+    const formData = new FormData();
+    formData.append('pdf', selectedFile);
+
+    try {
+      const res = await fetch('/generate', { method:'POST', body:formData });
+      if(!res.ok) { const e = await res.json(); throw new Error(e.detail||'Something went wrong.'); }
+      const data = await res.json();
+      sessionId = data.session_id;
+
+      // Replay the agent log entries
+      (data.agent_log || []).forEach(e => appendLog(e));
+      showQuality(data);
+      renderResults(data);
+    } catch(err) {
+      document.getElementById('error-box').textContent = '❌ ' + err.message;
+      document.getElementById('error-box').style.display = 'block';
+      document.getElementById('generate-btn').disabled = false;
+      document.getElementById('agent-status').textContent = 'Error';
+    }
+  }
+
+  function renderResults(data) {
+    document.getElementById('result-title').textContent = data.slides?.title || 'Your Presentation';
+
+    // Plan card
+    const p = data.plan || {};
+    document.getElementById('plan-card').innerHTML = `
+      <h3>🧠 Agent Strategy</h3>
+      <div class="plan-grid">
+        <div class="plan-item"><div class="label">Domain</div><div class="value">${p.domain||'—'}</div></div>
+        <div class="plan-item"><div class="label">Paper type</div><div class="value">${p.paper_type||'—'}</div></div>
+        <div class="plan-item"><div class="label">Audience</div><div class="value">${p.audience||'—'}</div></div>
+        <div class="plan-item"><div class="label">Tone</div><div class="value">${p.tone||'—'}</div></div>
+        <div class="plan-item"><div class="label">Slides</div><div class="value">${p.recommended_slides||'—'}</div></div>
+        <div class="plan-item"><div class="label">Emphasise</div><div class="value">${(p.emphasis||[]).join(', ')||'—'}</div></div>
+      </div>
+      ${p.key_contribution ? `<div style="margin-top:.8rem;font-size:.85rem;color:var(--mist)">
+        <strong style="color:var(--ink)">Key contribution:</strong> ${p.key_contribution}</div>` : ''}`;
+
+    // Slides
+    document.getElementById('panel-slides').innerHTML = (data.slides?.slides||[]).map(s => `
+      <div class="slide-card">
+        <div class="slide-card-header">
+          <span class="slide-num">${s.slide_number}</span>
+          <span class="slide-type">${s.type}</span>
+          <span class="slide-title">${s.title}</span>
+        </div>
+        <ul class="slide-points">${(s.key_points||[]).map(p=>`<li>${p}</li>`).join('')}</ul>
+        ${s.speaker_notes?`<div class="speaker-notes"><strong>🎤 Notes:</strong> ${s.speaker_notes}</div>`:''}
+      </div>`).join('');
+
+    // Poster
+    const poster = data.poster || {};
+    const cols = {left:[],center:[],right:[]};
+    (poster.sections||[]).forEach(s => { if(cols[s.column]) cols[s.column].push(s); });
+    const renderSec = s => `<div class="poster-section">
+      <h4>${s.name}</h4><p>${s.content}</p>
+      ${(s.bullet_points||[]).length?`<ul>${s.bullet_points.map(b=>`<li>${b}</li>`).join('')}</ul>`:''}
+      ${(s.figures||[]).filter(Boolean).map(f=>`<p class="fig">📊 ${f}</p>`).join('')}
+    </div>`;
+    const renderCol = (k,label) => `<div class="poster-col">
+      <div class="poster-col-title">${label}</div>${cols[k].map(renderSec).join('')}</div>`;
+    document.getElementById('panel-poster').innerHTML = `
+      <div>
+        <div class="poster-header"><h3>${poster.title||''}</h3><p>${poster.authors||''}</p></div>
+        <div class="key-takeaway"><span>★ Key Finding</span>${poster.key_takeaway||''}</div>
+        <div class="poster-columns">
+          ${renderCol('left','◀ Left Column')}${renderCol('center','▶ Centre Column')}${renderCol('right','▶ Right Column')}
+        </div>
+        <div class="poster-footer">✉️ ${poster.contact||''}</div>
+      </div>`;
+
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({behavior:'smooth'});
+  }
+
+  function downloadPptx() { if(sessionId) window.location.href = `/download/${sessionId}`; }
+
+  function switchTab(name, el) {
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById(`panel-${name}`).classList.add('active');
+  }
+
+  function reset() {
+    selectedFile=null; sessionId=null;
+    document.getElementById('file-selected').style.display='none';
+    document.getElementById('results').style.display='none';
+    document.getElementById('error-box').style.display='none';
+    document.getElementById('agent-panel').style.display='none';
+    document.getElementById('generate-btn').disabled=true;
+    fileInput.value='';
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+</script>
+</body>
+</html>
