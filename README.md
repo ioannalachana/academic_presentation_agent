@@ -18,11 +18,11 @@ How it works:
 
 This is a proper AI agent, not just a script. It goes through five stages automatically:
 
-Plan -> reads the paper and decides a strategy (audience, tone, which sections to emphasise)
-Generate -> creates the slide outline and poster layout using that strategy
-Review -> scores its own output critically out of 10
-Retry -> if the score is below 8, it rewrites with specific improvements (up to 3 attempts)
-Build -> produces the final PowerPoint file
+1. Plan -> reads the paper and decides a strategy (audience, tone, which sections to emphasise)
+2. Generate -> creates the slide outline and poster layout using that strategy
+3. Review -> scores its own output critically out of 10
+4. Retry -> if the score is below 8, it rewrites with specific improvements (up to 3 attempts)
+5. Build -> produces the final PowerPoint file
 
 
 
