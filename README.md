@@ -7,7 +7,7 @@ Note: the app may take 30–50 seconds to load if it hasn't been used recently (
 What it does:
 Upload any research paper as a PDF and the agent produces:
 
-1. A slide deck outline — 10–15 slides with titles, bullet points and speaker notes.
+1. A slide deck outline: 10-15 slides with titles, bullet points and speaker notes.
 
 2. A conference poster layout (3 columns - A0 format) with a key takeaway banner.
 
