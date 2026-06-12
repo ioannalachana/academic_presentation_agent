@@ -1,7 +1,5 @@
 """
-Academic Presentation Agent — REAL AGENT VERSION
--------------------------------------------------
-
+Academic Presentation Agent:
   1. PLANS    — analyses the paper and decides a strategy
   2. GENERATES — creates slides and poster
   3. REVIEWS  — scores its own output (0-10)
