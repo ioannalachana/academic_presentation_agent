@@ -1,14 +1,14 @@
 """
 Academic Presentation Agent:
-  1. PLANS    — analyses the paper and decides a strategy
-  2. GENERATES — creates slides and poster
-  3. REVIEWS  — scores its own output (0-10)
-  4. RETRIES  — rewrites if score < 8, up to 3 attempts
-  5. BUILDS   — produces the final .pptx
+  1. PLANS - analyses the paper and decides a strategy
+  2. GENERATES - creates slides and poster
+  3. REVIEWS - scores its own output (0-10)
+  4. RETRIES - rewrites if score < 8, up to 3 attempts
+  5. BUILDS - produces the final .pptx
 
-POST /generate  → runs the full agent loop, returns JSON
-GET  /download  → returns the .pptx file
-GET  /log       → returns live agent thought log
+POST /generate - runs the full agent loop, returns JSON
+GET  /download - returns the .pptx file
+GET  /log - returns live agent thought log
 """
 
 import os, json, time, uuid, tempfile
@@ -27,7 +27,7 @@ from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
 
-# ── App ────────────────────────────────────────────────────────────────────────
+# App 
 app = FastAPI(title="Academic Presentation Agent")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -39,7 +39,7 @@ MODEL  = "gemini-2.5-flash"
 PPTX_STORE: dict = {}
 LOG_STORE:  dict = defaultdict(list)
 
-# ── Gemini call with retry ─────────────────────────────────────────────────────
+# Gemini call with retry
 def call_gemini(prompt: str, retries: int = 3) -> str:
     for attempt in range(retries):
         try:
@@ -64,7 +64,7 @@ def log(sid: str, stage: str, message: str, data: dict = None):
     print(f"[{sid[:8]}] [{stage}] {message}")
 
 
-#  AGENT TOOLS
+# AGENT TOOLS
 
 def tool_extract_text(pdf_bytes: bytes) -> str:
     doc  = fitz.open(stream=pdf_bytes, filetype="pdf")
@@ -271,7 +271,7 @@ def tool_build_pptx(slides_data: dict) -> str:
     return path
 
 
-#  AGENT LOOP
+# AGENT LOOP
 
 def run_agent(sid: str, pdf_bytes: bytes) -> dict:
     """
