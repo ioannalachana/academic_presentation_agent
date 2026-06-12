@@ -1,41 +1,30 @@
-#  Academic Presentation Agent — Web App
+Academic Presentation Agent
 
-Upload a research paper -> get a slide outline, poster layout, and downloadable PowerPoint.
+Try it here:
+https://academic-presentation-agent.onrender.com/
+Note: the app may take 30–50 seconds to load if it hasn't been used recently (free hosting sleeps when idle). Just wait!!! It will wake up!!!
 
-**Powered by Google Gemini (free API).**
+What it does:
+Upload any research paper as a PDF and the agent produces:
 
-### Deploy on Render (free hosting)
-1. Go to [render.com](https://render.com) and sign up (free)
-2. Click **New** → **Web Service**
-3. Connect your GitHub repo
-4. Render auto-detects `render.yaml` — just click **Deploy**
-5. In the dashboard, go to **Environment** and add:
-   - Key: `GEMINI_API_KEY`
-   - Value: your key from [aistudio.google.com](https://aistudio.google.com)
+1. A slide deck outline — 10–15 slides with titles, bullet points and speaker notes.
 
+2. A conference poster layout (3 columns - A0 format) with a key takeaway banner.
 
-##  Run locally (for testing)
-
-pip install -r requirements.txt
-export GEMINI_API_KEY=your_key_here
-uvicorn main:app --reload
-```
-Then open [http://localhost:8000](http://localhost:8000)
+3. A downloadable PowerPoint file (.pptx).
 
 
-##  Project structure
+How it works:
 
-academic-agent-web/
-├── main.py            ← FastAPI backend (Python)
-├── requirements.txt   ← Python dependencies
-├── render.yaml        ← Render.com deployment config
-└── static/
-    └── index.html     ← Frontend (HTML + CSS + JS)
+This is a proper AI agent, not just a script. It goes through five stages automatically:
+
+Plan -> reads the paper and decides a strategy (audience, tone, which sections to emphasise)
+Generate -> creates the slide outline and poster layout using that strategy
+Review -> scores its own output critically out of 10
+Retry -> if the score is below 8, it rewrites with specific improvements (up to 3 attempts)
+Build -> produces the final PowerPoint file
 
 
 
-##  Notes
 
-- The `GEMINI_API_KEY` stays on the server — users never see it
-- The free Gemini tier allows ~1,500 requests/day — enough for hundreds of papers
-- Generated `.pptx` files are stored temporarily in memory and cleared on restart
+
