@@ -1,7 +1,7 @@
 """
 Academic Presentation Agent — REAL AGENT VERSION
 -------------------------------------------------
-This is a proper agent, not just a pipeline. It:
+
   1. PLANS    — analyses the paper and decides a strategy
   2. GENERATES — creates slides and poster
   3. REVIEWS  — scores its own output (0-10)
@@ -65,9 +65,8 @@ def log(sid: str, stage: str, message: str, data: dict = None):
     LOG_STORE[sid].append(entry)
     print(f"[{sid[:8]}] [{stage}] {message}")
 
-# ══════════════════════════════════════════════════════
+
 #  AGENT TOOLS
-# ══════════════════════════════════════════════════════
 
 def tool_extract_text(pdf_bytes: bytes) -> str:
     doc  = fitz.open(stream=pdf_bytes, filetype="pdf")
@@ -273,9 +272,8 @@ def tool_build_pptx(slides_data: dict) -> str:
     prs.save(path)
     return path
 
-# ══════════════════════════════════════════════════════
+
 #  AGENT LOOP
-# ══════════════════════════════════════════════════════
 
 def run_agent(sid: str, pdf_bytes: bytes) -> dict:
     """
@@ -334,7 +332,7 @@ def run_agent(sid: str, pdf_bytes: bytes) -> dict:
         "agent_log":     LOG_STORE[sid],
     }
 
-# ── Routes ─────────────────────────────────────────────────────────────────────
+# Routes 
 
 @app.get("/", response_class=HTMLResponse)
 async def index():
